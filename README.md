@@ -2,12 +2,12 @@
   <img src="https://i.imgur.com/ZyEG49s.jpeg" alt="Hierarchy Tree Logo" width="250" height="250"/>
 </p>
 
-A powerful, local AI tool for generating rich, descriptive captions for anime and artwork images. This tool leverages the **JoyCaption** model (LLaVA-based) to provide detailed, uncensored descriptions suitable for training Stable Diffusion LoRAs or organizing large datasets.
+A powerful, local AI tool for generating rich, descriptive captions for anime and artwork images. This tool leverages the **JoyCaption** model (LLaVA-based) to provide detailed descriptions without the limitations found in most online captioning tools, making it ideal for training Stable Diffusion LoRAs or organizing large datasets.
 
 ## Features
 
 - **Rich Descriptions:** Generates detailed sentences covering character appearance, pose, clothing, and background.
-- **Uncensored:** Capable of handling mixed SFW and NSFW datasets without arbitrary filtering.
+
 - **Batch Processing:** Recursively scans folders and subfolders.
 - **Blacklist System:** Automatically removes unwanted keywords (e.g., specific hair colors) from generated captions.
 - **Formats:** Outputs individual `.txt` files next to each image and a master `.jsonl` file.

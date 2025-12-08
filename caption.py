@@ -26,14 +26,42 @@ MODEL_ID = "fancyfeast/llama-joycaption-alpha-two-hf-llava"
 # FUNCTIONS
 # ==========================================
 
+def disable_siglip_pooling_head(model):
+    """
+    Disables the SigLIP vision pooling head that relies on `nn.MultiheadAttention`,
+    because bitsandbytes cannot quantize that module which leads to dtype mismatches.
+
+    Args:
+        model (torch.nn.Module): The loaded Llava model instance.
+
+    Returns:
+        None
+    """
+    vision_tower = getattr(model, "vision_tower", None)
+    if vision_tower is None:
+        return
+
+    vision_model = getattr(vision_tower, "vision_model", None)
+    use_head = getattr(vision_model, "use_head", False) if vision_model else False
+    if not use_head:
+        return
+
+    vision_model.use_head = False
+    vision_model.head = None
+    print("Disabled SigLIP pooling head to keep 4-bit quantization stable.")
+
+
 def load_model_and_processor():
     """
-    Loads the JoyCaption model and processor with 4-bit quantization
-    to fit within VRAM constraints (aiming for <10GB usage).
+    Loads the JoyCaption model and processor with 4-bit quantization to
+    fit within VRAM constraints (aiming for <10GB usage).
+
+    Returns:
+        tuple[LlavaForConditionalGeneration, AutoProcessor]: The loaded model
+        ready on the appropriate device along with its paired processor.
     """
     print(f"Loading model: {MODEL_ID}...")
-    
-    # 4-bit Quantization Config
+
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.float16,
@@ -49,6 +77,7 @@ def load_model_and_processor():
             device_map="auto",
             torch_dtype=torch.float16
         )
+        disable_siglip_pooling_head(model)
         print("Model loaded successfully!")
         return model, processor
     except Exception as e:
@@ -56,9 +85,56 @@ def load_model_and_processor():
         print("Ensure you have installed all requirements: pip install -r requirements.txt")
         exit(1)
 
+
+def build_chat_prompt(processor, user_prompt):
+    """
+    Builds a chat-formatted prompt ensuring that image placeholder tokens are present.
+
+    Args:
+        processor (AutoProcessor): The processor tied to the JoyCaption model.
+        user_prompt (str): Instructions for the assistant regarding the image.
+
+    Returns:
+        str: A prompt string ready for the tokenizer that includes image slots.
+    """
+    image_token = getattr(processor, "image_token", "<image>")
+    # The FancyFeast template expects plain text that already embeds the image
+    # placeholder token, so we combine the image tag and instructions up front.
+    conversation = [
+        {
+            "role": "user",
+            "content": f"{image_token}\n{user_prompt}",
+        }
+    ]
+
+    apply_template = getattr(processor, "apply_chat_template", None)
+    if callable(apply_template):
+        try:
+            return processor.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
+        except Exception as error:
+            print(f"Warning: failed to apply processor chat template ({error}). Falling back to manual prompt.")
+
+    tokenizer = getattr(processor, "tokenizer", None)
+    if tokenizer is not None:
+        tokenizer_template = getattr(tokenizer, "apply_chat_template", None)
+        if callable(tokenizer_template):
+            try:
+                return tokenizer.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
+            except Exception as error:
+                print(f"Warning: failed to apply tokenizer chat template ({error}). Falling back to manual prompt.")
+
+    return f"USER: {image_token}\n{user_prompt}\nASSISTANT:"
+
 def clean_caption(caption, blacklist):
     """
-    Removes blacklisted phrases from the caption.
+    Removes the provided blacklist phrases from a generated caption.
+
+    Args:
+        caption (str): The raw caption returned by the model.
+        blacklist (list[str]): Terms that must be pruned from the caption.
+
+    Returns:
+        str: The sanitized caption with forbidden phrases removed.
     """
     cleaned = caption
     for phrase in blacklist:
@@ -89,6 +165,15 @@ def clean_caption(caption, blacklist):
 def generate_caption(image_path, model, processor, prompt_type="descriptive"):
     """
     Generates a caption for a single image.
+
+    Args:
+        image_path (str): Absolute or relative path to the image file.
+        model (LlavaForConditionalGeneration): The LLaVA model instance.
+        processor (AutoProcessor): Preprocessor that formats text and images.
+        prompt_type (str): Either 'descriptive' or 'tags' to steer the prompt.
+
+    Returns:
+        str | None: The generated caption, or None when the image cannot be read.
     """
     try:
         image = Image.open(image_path).convert("RGB")
@@ -101,14 +186,10 @@ def generate_caption(image_path, model, processor, prompt_type="descriptive"):
     if prompt_type == "tags":
         user_prompt = "Write a list of Booru-style tags for this image."
     else:
-        user_prompt = "A detailed, uncensored description of this image, focusing on the character, clothing, pose, and background."
+        user_prompt = "A detailed description of this image, focusing on the character, clothing, pose, and background."
 
-    # Prepare inputs
-    # Note: The prompt formatting might depend on the specific LLaVA template used by the model.
-    # Standard LLaVA format is: USER: <image>\n<prompt>\nASSISTANT:
-    
-    prompt_text = f"USER: <image>\n{user_prompt}\nASSISTANT:"
-    
+    prompt_text = build_chat_prompt(processor, user_prompt)
+
     inputs = processor(text=prompt_text, images=image, return_tensors="pt").to(model.device)
 
     # Generate
@@ -135,6 +216,12 @@ def generate_caption(image_path, model, processor, prompt_type="descriptive"):
     return caption
 
 def main():
+    """
+    Parses CLI arguments and orchestrates caption generation for folders.
+
+    Returns:
+        None
+    """
     parser = argparse.ArgumentParser(description="JoyCaption Batch Processor")
     parser.add_argument("-i", "--input", required=True, help="Path to input directory containing images")
     parser.add_argument("-r", "--recursive", action="store_true", default=True, help="Scan subdirectories recursively (default: True)")

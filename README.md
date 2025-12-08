@@ -1,4 +1,6 @@
-# JoyCaption Generator
+<p align="center">
+  <img src="https://i.imgur.com/0hITXxm.png" alt="Hierarchy Tree Logo" width="450" height="450"/>
+</p>
 
 A powerful, local AI tool for generating rich, descriptive captions for anime and artwork images. This tool leverages the **JoyCaption** model (LLaVA-based) to provide detailed, uncensored descriptions suitable for training Stable Diffusion LoRAs or organizing large datasets.
 

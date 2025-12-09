@@ -1,7 +1,7 @@
 # Gemini AI Guidelines for Caption Generator
 
 ## Project Overview
-This project is a local AI tool for generating rich, descriptive captions for anime and artwork images using the JoyCaption model (LLaVA-based). It supports batch processing, custom blacklists, and efficient 4-bit quantization.
+This project is a local AI tool for generating rich, descriptive captions or Booru-style tags for anime and artwork images using the JoyCaption model (LLaVA-based). It supports batch processing, custom blacklists, and efficient 4-bit quantization.
 
 ## Tech Stack
 - **Language:** Python 3.10+

@@ -197,7 +197,7 @@ def generate_caption(image_path, model, processor, prompt_type="descriptive"):
         image_path (str): Absolute or relative path to the image file.
         model (LlavaForConditionalGeneration): The LLaVA model instance.
         processor (AutoProcessor): Preprocessor that formats text and images.
-        prompt_type (str): Either 'descriptive' or 'tags' to steer the prompt.
+        prompt_type (str): Either 'descriptive' or 'booru' to steer the prompt.
 
     Returns:
         str | None: The generated caption, or None when the image cannot be read.
@@ -210,8 +210,8 @@ def generate_caption(image_path, model, processor, prompt_type="descriptive"):
 
     # JoyCaption User Prompt
     # We can adjust this prompt to steer the model towards tags or sentences.
-    if prompt_type == "tags":
-        user_prompt = "Write a list of Booru-style tags for this image."
+    if prompt_type == "booru":
+        user_prompt = "Write a comma-separated list of Booru-style tags for this image."
     else:
         user_prompt = "A detailed description of this image, focusing on the character, clothing, pose, and background."
 
@@ -245,7 +245,7 @@ def main():
     parser.add_argument("-i", "--input", required=True, help="Path to input directory containing images")
     parser.add_argument("-r", "--recursive", action="store_true", default=True, help="Scan subdirectories recursively (default: True)")
     parser.add_argument("--force", action="store_true", help="Overwrite existing .txt files")
-    parser.add_argument("--mode", choices=["descriptive", "tags"], default="descriptive", help="Caption style: 'descriptive' (sentences) or 'tags' (Booru tags)")
+    parser.add_argument("--mode", choices=["descriptive", "booru"], default="booru", help="Caption style: 'descriptive' (sentences) or 'booru' (keyword-like tags)")
     
     args = parser.parse_args()
 

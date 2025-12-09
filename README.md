@@ -6,7 +6,7 @@ A powerful, local AI tool for generating rich, descriptive captions for anime an
 
 ## Features
 
-- **Rich Descriptions:** Generates detailed sentences covering character appearance, pose, clothing, and background.
+- **Rich Descriptions & Tags:** Generates detailed sentences or Booru-style tags covering character appearance, pose, clothing, and background.
 - **Batch Processing:** Recursively scans folders and subfolders.
 - **Blacklist System:** Automatically removes unwanted keywords (e.g., specific hair colors) from generated captions.
 - **Formats:** Outputs individual `.txt` files next to each image and a master `.jsonl` file.
@@ -52,14 +52,20 @@ python caption.py -i /path/to/your/images
 | `-i`, `--input` | Path to the folder containing images. | (Required) |
 | `-r`, `--recursive` | Recursively search subfolders. | `True` |
 | `--force` | Overwrite existing `.txt` caption files. | `False` |
-| `--mode` | Caption style: `descriptive` (sentences) or `tags` (Booru list). | `descriptive` |
+| `--mode` | Caption style: `booru` (keyword-like tags) or `descriptive` (sentences). | `booru` |
 
 ### Example
 
-Caption a folder of images, forcing overwrite of old captions, and using descriptive mode:
+Caption a folder of images using the default Booru-style (tags):
 
 ```rb
-python caption.py -i /home/user/pictures/anime --force --mode descriptive
+python caption.py -i /home/user/pictures/anime
+```
+
+Caption a folder of images using full descriptive sentences:
+
+```rb
+python caption.py -i /home/user/pictures/anime --mode descriptive
 ```
 
 ## Configuration

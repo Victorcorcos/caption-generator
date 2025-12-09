@@ -7,3 +7,4 @@ pillow>=10.0.0
 tqdm>=4.66.0
 sentencepiece>=0.2.0
 protobuf>=5.27.0
+python-dotenv>=1.0.0

@@ -71,15 +71,10 @@ python caption.py -i /home/user/pictures/anime --mode descriptive
 ## Configuration
 
 ### Blacklist
-To prevent specific terms from appearing in your captions (e.g., if you want to hard-code a trigger word in your training and don't want the captioner to describe it redundantly, or if the model hallucinates a specific trait), edit the `BLACKLIST` array in `caption.py`:
+To prevent specific terms from appearing in your captions (e.g., if you want to hard-code a trigger word in your training and don't want the captioner to describe it redundantly, or if the model hallucinates a specific trait), create a `.env` file (use `.env.example` as a template) and set the `BLACKLIST` variable using a JSON array:
 
-```python
-BLACKLIST = [
-  "large pectorals",
-  "muscular",
-  "watermark",
-  "username"
-]
+```env
+BLACKLIST=["large pectorals", "muscular", "watermark", "username"]
 ```
 
 ## Model Details

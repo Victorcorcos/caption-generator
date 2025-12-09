@@ -1,16 +1,28 @@
 import argparse
 import os
 import re
+import json
 import torch
 from PIL import Image
 from tqdm import tqdm
 from transformers import AutoProcessor, LlavaForConditionalGeneration, BitsAndBytesConfig
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ==========================================
 # CONFIGURATION & CONSTANTS
 # ==========================================
 
-from blacklist import BLACKLIST
+blacklist_env = os.getenv("BLACKLIST")
+if blacklist_env:
+    try:
+        BLACKLIST = json.loads(blacklist_env)
+    except json.JSONDecodeError:
+        print("Warning: Failed to parse BLACKLIST from .env. Ensure it is a valid JSON array.")
+        BLACKLIST = []
+else:
+    BLACKLIST = []
 
 # Model ID on HuggingFace
 # Using the Alpha Two HF LLaVA compatible version which is stable and high quality.

@@ -22,6 +22,7 @@ wheels/
 
 # Local files
 local
+.env
 
 # Virtual environments
 venv/

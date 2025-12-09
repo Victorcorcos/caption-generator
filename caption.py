@@ -1,6 +1,6 @@
 import argparse
 import os
-import json
+import re
 import torch
 from PIL import Image
 from tqdm import tqdm
@@ -21,6 +21,7 @@ BLACKLIST = [
 # Using the Alpha Two HF LLaVA compatible version which is stable and high quality.
 # You can swap this for a Beta version if a compatible HF repo becomes available.
 MODEL_ID = "fancyfeast/llama-joycaption-alpha-two-hf-llava"
+AGGREGATE_FILENAME = "captions_all.txt"
 
 # ==========================================
 # FUNCTIONS
@@ -125,6 +126,45 @@ def build_chat_prompt(processor, user_prompt):
 
     return f"USER: {image_token}\n{user_prompt}\nASSISTANT:"
 
+
+def extract_assistant_response(raw_output):
+    """
+    Returns only the assistant portion of a generated conversation transcript.
+
+    Args:
+        raw_output (str): The decoded conversation that may include system/user turns.
+
+    Returns:
+        str: The assistant response, or the original text when no marker is found.
+    """
+    if not raw_output:
+        return ""
+
+    lines = raw_output.splitlines()
+    response_lines = []
+    collecting = False
+
+    for line in lines:
+        if line.strip().lower() == "assistant":
+            collecting = True
+            response_lines = []
+            continue
+        if collecting:
+            response_lines.append(line)
+
+    if response_lines:
+        return "\n".join(response_lines).strip()
+
+    marker_pattern = re.compile(r"\bassistant\b[:\s]*", re.IGNORECASE)
+    last_match = None
+    for match in marker_pattern.finditer(raw_output):
+        last_match = match
+
+    if last_match:
+        return raw_output[last_match.end():].strip()
+
+    return raw_output.strip()
+
 def clean_caption(caption, blacklist):
     """
     Removes the provided blacklist phrases from a generated caption.
@@ -205,15 +245,7 @@ def generate_caption(image_path, model, processor, prompt_type="descriptive"):
 
     # Decode
     output = processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-    
-    # The output usually contains the prompt as well, we need to strip it.
-    # LLaVA outputs usually start with the full prompt.
-    if "ASSISTANT:" in output:
-        caption = output.split("ASSISTANT:")[-1].strip()
-    else:
-        caption = output
-
-    return caption
+    return extract_assistant_response(output)
 
 def main():
     """
@@ -272,20 +304,21 @@ def main():
         if raw_caption:
             # Clean
             final_caption = clean_caption(raw_caption, BLACKLIST)
+            final_caption = " ".join(final_caption.split())
             
             # Save to individual .txt file
             with open(txt_path, "w", encoding="utf-8") as f:
-                f.write(final_caption)
+                f.write(f"{final_caption}\n")
             
             # Store for aggregate file
-            all_captions.append({"image": img_path, "caption": final_caption})
+            all_captions.append(final_caption)
 
     # Save Aggregate File
-    agg_path = os.path.join(args.input, "captions_all.jsonl")
+    agg_path = os.path.join(args.input, AGGREGATE_FILENAME)
     print(f"\nSaving aggregate captions to {agg_path}...")
     with open(agg_path, "w", encoding="utf-8") as f:
-        for entry in all_captions:
-            f.write(json.dumps(entry) + "\n")
+        for caption in all_captions:
+            f.write(f"{caption}\n")
 
     print("\nDone! ✨")
 

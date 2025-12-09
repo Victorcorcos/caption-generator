@@ -10,12 +10,7 @@ from transformers import AutoProcessor, LlavaForConditionalGeneration, BitsAndBy
 # CONFIGURATION & CONSTANTS
 # ==========================================
 
-# Words/Phrases to exclude from the generated captions (Case Insensitive)
-BLACKLIST = [
-    "black hair",
-    "brown hair",
-    # Add more blacklist terms here
-]
+from blacklist import BLACKLIST
 
 # Model ID on HuggingFace
 # Using the Alpha Two HF LLaVA compatible version which is stable and high quality.
@@ -178,28 +173,20 @@ def clean_caption(caption, blacklist):
     """
     cleaned = caption
     for phrase in blacklist:
-        # Case insensitive replace
-        pattern = phrase.lower()
-        if pattern in cleaned.lower():
-            # A simple replace might be tricky with casing, so we do a case-insensitive check
-            # and remove it. For robustness, we can use regex, but simple replacement 
-            # of the exact match in the original string is better if we find the index.
-            # Here we will do a simple pass.
-            
-            # Find start index
-            lower_cleaned = cleaned.lower()
-            start_idx = lower_cleaned.find(pattern)
-            while start_idx != -1:
-                end_idx = start_idx + len(pattern)
-                # Remove the phrase and any immediate following comma/space if it creates a double separator
-                cleaned = cleaned[:start_idx] + cleaned[end_idx:]
-                
-                # Re-check for next occurrence
-                lower_cleaned = cleaned.lower()
-                start_idx = lower_cleaned.find(pattern)
+        # Case insensitive regex replacement
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        cleaned = pattern.sub("", cleaned)
     
-    # Post-cleanup to fix double spaces or commas
-    cleaned = cleaned.replace(" ,", ",").replace(",,", ",").strip()
+    # Clean up formatting artifacts caused by removal
+    # 1. Collapse multiple spaces into one
+    cleaned = re.sub(r'\s+', ' ', cleaned)
+    # 2. Remove space before commas
+    cleaned = re.sub(r'\s+,', ',', cleaned)
+    # 3. Collapse multiple commas
+    cleaned = re.sub(r',+', ',', cleaned)
+    # 4. Remove leading/trailing commas and whitespace
+    cleaned = cleaned.strip(' ,')
+    
     return cleaned
 
 def generate_caption(image_path, model, processor, prompt_type="descriptive"):

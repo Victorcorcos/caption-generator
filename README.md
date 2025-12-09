@@ -7,7 +7,6 @@ A powerful, local AI tool for generating rich, descriptive captions for anime an
 ## Features
 
 - **Rich Descriptions:** Generates detailed sentences covering character appearance, pose, clothing, and background.
-
 - **Batch Processing:** Recursively scans folders and subfolders.
 - **Blacklist System:** Automatically removes unwanted keywords (e.g., specific hair colors) from generated captions.
 - **Formats:** Outputs individual `.txt` files next to each image and a master `.jsonl` file.
@@ -23,26 +22,26 @@ A powerful, local AI tool for generating rich, descriptive captions for anime an
 ## Installation
 
 1.  **Clone or Open the Repository:**
-    ```bash
-    cd /path/to/caption-generator
-    ```
+```rb
+cd /path/to/caption-generator
+```
 
 2.  **Create a Virtual Environment (Recommended):**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
+```rb
+python3 -m venv venv
+source venv/bin/activate
+```
 
 3.  **Install Dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+```rb
+pip install -r requirements.txt
+```
 
 ## Usage
 
 Run the script pointing to your image directory:
 
-```bash
+```rb
 python caption.py -i /path/to/your/images
 ```
 
@@ -59,7 +58,7 @@ python caption.py -i /path/to/your/images
 
 Caption a folder of images, forcing overwrite of old captions, and using descriptive mode:
 
-```bash
+```rb
 python caption.py -i /home/user/pictures/anime --force --mode descriptive
 ```
 
@@ -70,10 +69,10 @@ To prevent specific terms from appearing in your captions (e.g., if you want to 
 
 ```python
 BLACKLIST = [
-    "black hair",
-    "brown hair",
-    "watermark",
-    "username"
+  "large pectorals",
+  "muscular",
+  "watermark",
+  "username"
 ]
 ```
 
@@ -83,4 +82,5 @@ This tool defaults to using `fancyfeast/llama-joycaption-alpha-two-hf-llava`. Th
 
 ## License
 
-This project is for personal and educational use. Please respect the licenses of the underlying models (JoyCaption, Llama 3, LLaVA).
+This project is for personal and educational use. Please respect the licenses of the underlying models being applied (JoyCaption, Llama 3, LLaVA).
+

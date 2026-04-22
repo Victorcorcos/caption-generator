@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://i.imgur.com/ZyEG49s.jpeg" alt="Hierarchy Tree Logo" width="250" height="250"/>
+  <img src="https://i.imgur.com/ZyEG49s.jpeg" alt="Hierarchy Tree Logo" width="40%" />
 </p>
 
 A powerful, local AI tool for generating rich, descriptive captions for anime and artwork images. This tool leverages the **JoyCaption** model (LLaVA-based) to provide detailed descriptions without the limitations found in most online captioning tools, making it ideal for training Stable Diffusion LoRAs or organizing large datasets.
